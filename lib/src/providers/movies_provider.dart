@@ -1,11 +1,26 @@
 import 'package:movieapp/src/models/movie_model.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:async';
 
 class MoviesProvider{
+
   String _apiKey = '12f76d12c95f1a0b86df28eebc6f58a0';
   String _url = 'api.themoviedb.org';
   String _language = 'en-US';
+  int _populars = 0;
+  bool  _loading = false;
+  List<Movie> _popularMovies = new List();
+  final _streamController = StreamController<List<Movie>>.broadcast();
+
+  Function(List<Movie>) get popularsSink => _streamController.sink.add;
+
+  Stream<List<Movie>> get popularsStream => _streamController.stream;
+
+
+  void disposeStreams(){
+    _streamController?.close();
+  }
 
   Future<List<Movie>> getCinema() async{
 
@@ -19,12 +34,25 @@ class MoviesProvider{
 
   Future<List<Movie>> getPopular() async{
 
+    if( _loading ) return [];
+
+    _loading = true;
+    _populars++;
+
     final url = Uri.https( _url , '3/movie/popular', {
       'api_key' : _apiKey,
-      'language' : _language
+      'language' : _language,
+      'page'     : _populars.toString()
     });
 
-    return await _processResponse( url );
+    final resp = await  _processResponse( url );
+
+    _popularMovies.addAll( resp );
+    popularsSink( _popularMovies );
+    
+    _loading = false;
+    
+    return resp;
   }
 
   Future<List<Movie>> _processResponse( Uri url) async{

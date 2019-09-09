@@ -12,6 +12,8 @@ class HomeView extends StatelessWidget{
   @override
   Widget build( BuildContext context ){
 
+    moviesProvider.getPopular();
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: false,
@@ -76,13 +78,14 @@ class HomeView extends StatelessWidget{
             ),
           ),
           SizedBox(height: 10.0,),
-          FutureBuilder(
-            future: moviesProvider.getPopular(),
+          StreamBuilder(
+            stream: moviesProvider.popularsStream,
             builder: ( BuildContext context, AsyncSnapshot<List<Movie>> snapshot ){
 
               if( snapshot.hasData ){
                 return MovieHorizontal(
                   movies: snapshot.data,
+                  nextPage: moviesProvider.getPopular,
                 );
               }
               else{
