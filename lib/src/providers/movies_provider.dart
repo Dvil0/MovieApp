@@ -1,7 +1,9 @@
-import 'package:movieapp/src/models/movie_model.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
+import 'package:movieapp/src/models/movie_model.dart';
+import 'package:movieapp/src/models/actors_model.dart';
 
 class MoviesProvider{
 
@@ -62,5 +64,31 @@ class MoviesProvider{
     final movies = new Movies.fromJsonList( decodedData['results'] );
 
     return movies.items;
+  }
+
+  Future<List<Actor>> getCast( String idMovie ) async{
+
+    final url = Uri.https( _url , '3/movie/$idMovie/credits', {
+      'api_key'  : _apiKey,
+      'language'  : _language,
+    });
+
+    final resp = await http.get( url );
+    final decodedData = json.decode( resp.body );
+    final actors = new Actors.fromJsonList( decodedData['cast'] );
+    
+    return actors.actors;
+  }
+
+  Future<List<Movie>> searchMovie( String query ) async{
+
+    final url = Uri.https( _url , '3/search/movie', {
+      'api_key'  : _apiKey,
+      'language' : _language,
+      'query'    : query
+    } );
+
+    return await _processResponse( url );
+
   }
 }
